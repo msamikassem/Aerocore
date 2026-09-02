@@ -1,0 +1,28 @@
+ KiCad backups / autosave / locks
+*-bak
+*.bak
+_autosave-*
+*.lck
+*~
+fp-info-cache
+
+# KiCad project-local settings (machine-specific, not useful to share)
+*.kicad_prl
+
+# 3D model cache
+*-cache.lib
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor junk
+.vscode/
+*.swp
+
+# Firmware build output (adjust once firmware toolchain is picked)
+build/
+*.o
+*.elf
+*.bin
+*.hex
