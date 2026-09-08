@@ -44,7 +44,7 @@ docs/
 ## Status
 
 - [X] Schematic design
-- [ ] PCB layout
+- [X] PCB layout
 - [ ] Ordered from JLCPCB
 - [ ] Board assembled and bring-up tested
 - [ ] Firmware
@@ -52,7 +52,7 @@ docs/
 
 ## Tools used
 
-- KiCad 9 for schematic + PCB
+- KiCad 7 for schematic + PCB
 
 ## License
 
