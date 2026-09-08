@@ -45,7 +45,7 @@ docs/
 
 - [X] Schematic design
 - [X] PCB layout
-- [ ] Ordered from JLCPCB
+- [X] Ordered from JLCPCB
 - [ ] Board assembled and bring-up tested
 - [ ] Firmware
 - [ ] First flight
