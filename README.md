@@ -36,9 +36,17 @@ hardware/                           -> PCB files
         Data_sheets/                -> Data sheets of chosen components 
         My_FootPrints.pretty/       -> FootPrints not avaliable on KiCAD
         Schematics/                 -> Schematics not avaliable on KiCAD
-        
+        3D part/                    -> Components' 3D model
+    archive/                        -> PCB V1
+    manufacturing/                  -> files needed by PCB manufacturer
+        bom/                        -> bill of material
+        cpl/                        -> component placement
+        DRC/                        -> KiCAD Error and warning reports
+    
 firmware/                           -> flight firmware
 docs/
+    design-log                      -> PCB design decisions and difficulties
+    specs                           -> PCB specifications  
 ```
 
 ## Status
