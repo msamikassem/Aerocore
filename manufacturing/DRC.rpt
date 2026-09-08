@@ -1,0 +1,54 @@
+** Drc report for /home/mo/flight_controller/Aerocore/Aerocore.kicad_pcb **
+** Created on 2026-09-13 06:24:21 **
+
+** Found 12 DRC violations **
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(142.2500 mm, 90.5250 mm): Reference 'D1'
+    @(141.5850 mm, 91.9600 mm): Line on F.Silkscreen
+[lib_footprint_mismatch]: Footprint 'XDCR_BMI270' does not match copy in library 'Custom'.
+    Local override; Severity: warning
+    @(147.0000 mm, 82.2500 mm): Footprint U3
+[lib_footprint_mismatch]: Footprint 'QFN-48-1EP_7x7mm_P0.5mm_EP5.6x5.6mm' does not match copy in library 'Package_DFN_QFN'.
+    Local override; Severity: warning
+    @(146.9000 mm, 75.2000 mm): Footprint U4
+[lib_footprint_issues]: The current configuration does not include the library ''.
+    Local override; Severity: warning
+    @(145.5843 mm, 80.9410 mm): Footprint G***
+[lib_footprint_mismatch]: Footprint 'USB_C_Receptacle_G-Switch_GT-USB-7010ASV' does not match copy in library 'Connector_USB'.
+    Local override; Severity: warning
+    @(161.1750 mm, 77.9300 mm): Footprint J3
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(165.0000 mm, 68.7500 mm): Line on Edge.Cuts
+    @(164.9600 mm, 82.5100 mm): Line on F.Silkscreen
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(165.0000 mm, 68.7500 mm): Line on Edge.Cuts
+    @(163.2550 mm, 73.3500 mm): Line on F.Silkscreen
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(165.0000 mm, 68.7500 mm): Line on Edge.Cuts
+    @(164.9600 mm, 73.3500 mm): Line on F.Silkscreen
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2000 mm; actual 0.1751 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(158.5700 mm, 80.8200 mm): NPTH pad of J3
+    @(157.4500 mm, 81.1300 mm): Pad A1 [GND] of J3 on F.Cu
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2000 mm; actual 0.1751 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(158.5700 mm, 80.8200 mm): NPTH pad of J3
+    @(157.4500 mm, 81.1300 mm): Pad B12 [GND] of J3 on F.Cu
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2000 mm; actual 0.1751 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(158.5700 mm, 75.0400 mm): NPTH pad of J3
+    @(157.4500 mm, 74.7300 mm): Pad A12 [GND] of J3 on F.Cu
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2000 mm; actual 0.1751 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(158.5700 mm, 75.0400 mm): NPTH pad of J3
+    @(157.4500 mm, 74.7300 mm): Pad B1 [GND] of J3 on F.Cu
+
+** Found 0 unconnected pads **
+
+** Found 0 Footprint errors **
+
+** End of Report **
