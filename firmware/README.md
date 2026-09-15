@@ -7,6 +7,7 @@
 ## Planned approach
 
 - Bare-metal , mainly so I actually understand what's happening at the register level rather than dropping straight into an existing flight stack.
+- Configure the STM32 to use the HSE (16MHZ crystal) and generate a higher fequency (100 MHZ) using PLL .
 - BMI270 driver over SPI1, reading gyro + accel via the interrupt pins (PA1, PB0).
 - ADM to transfer measured data to RAM.
 - standard PWM output on TIM4 for the 4 ESCs, probably start with plain PWM since it's simpler to get right first, move to DShot later.
@@ -16,6 +17,7 @@
 - Eventually: basic rate/angle mode flight control loop, once sensor fusion and motor output are both confirmed working independently.
 
 ## Tasks
+[] Create a Project using STM32CubeMX (No pins are configured in this stage)
 
 **SPI Configuration**
 [] Configure SPI
