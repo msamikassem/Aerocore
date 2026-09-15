@@ -1,0 +1,27 @@
+!SESSION 2026-09-15 20:22:38.963 -----------------------------------------------
+eclipse.buildId=Version 2.2.0
+java.version=21.0.10
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=linux, ARCH=x86_64, WS=gtk, NL=en_US
+Command-line arguments:  -os linux -ws gtk -arch x86_64
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2026-09-15 20:22:48.025
+!MESSAGE Log4j2 initialized with config file /home/mo/Aerocore/.metadata/.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2026-09-15 20:22:49.506
+!MESSAGE Started RMI Server, listening on port 41337
+!SESSION 2026-09-15 20:34:10.307 -----------------------------------------------
+eclipse.buildId=Version 2.2.0
+java.version=21.0.10
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=linux, ARCH=x86_64, WS=gtk, NL=en_US
+Command-line arguments:  -os linux -ws gtk -arch x86_64
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2026-09-15 20:34:22.185
+!MESSAGE Log4j2 initialized with config file /home/mo/Aerocore/.metadata/.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2026-09-15 20:34:24.162
+!MESSAGE Started RMI Server, listening on port 41337
+
+!ENTRY org.eclipse.cdt.core 1 0 2026-09-15 20:35:21.980
+!MESSAGE Indexed 'firmware' (19 sources, 115 headers) in 1.85 sec: 10,244 declarations; 36,359 references; 1 unresolved inclusions; 92 syntax errors; 238 unresolved names (0.51%)
