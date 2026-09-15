@@ -16,16 +16,8 @@
 - ST-LINK for configuration/flashing
 - Eventually: basic rate/angle mode flight control loop, once sensor fusion and motor output are both confirmed working independently.
 
-## Toolchain
-
-- STM32CubeMX used only to generate the initial STM32CubeIDE project files.
-- STM32CubeIDE used for writing, building, and debugging the firmware. Peripheral/pin configuration is done manually in code rather than through CubeMX.
-- ARM GNU Toolchain compiler/toolchain used by STM32CubeIDE to build the firmware.
-- ST-LINK over SWD used to flash and debug the firmware on the Aerocore PCB.
-
 ## Tasks
-
-[X] Create a Project using STM32CubeMX (No pins are configured in this stage)
+[] Create a Project using STM32CubeMX (No pins are configured in this stage)
 
 **SPI Configuration**
 [] Configure SPI

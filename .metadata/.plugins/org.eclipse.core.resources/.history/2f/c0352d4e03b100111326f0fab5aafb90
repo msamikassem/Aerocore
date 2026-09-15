@@ -24,8 +24,7 @@
 - ST-LINK over SWD used to flash and debug the firmware on the Aerocore PCB.
 
 ## Tasks
-
-[X] Create a Project using STM32CubeMX (No pins are configured in this stage)
+[] Create a Project using STM32CubeMX (No pins are configured in this stage)
 
 **SPI Configuration**
 [] Configure SPI
