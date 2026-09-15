@@ -6,6 +6,9 @@ _autosave-*
 *~
 fp-info-cache
 
+#CubeIDE
+*.metadata
+
 # KiCad project-local settings (machine-specific, not useful to share)
 *.kicad_prl
 
