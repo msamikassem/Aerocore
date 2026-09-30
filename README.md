@@ -2,7 +2,7 @@
 
 Aerocore is a flight controller for 3-inch FPV drones, built around an STM32F411 microcontroller and a BMI270 IMU. It handles IMU sensing, ESC motor control, USB configuration, and power regulation from a 4S LiPo on a single 4-layer board.
 
-
+<img src="images/pcb.jpg" width="500">
 ## What it does
 
 - Runs an STM32F411CEU6 (Cortex-M4, 100MHz) as the main flight computer
@@ -20,12 +20,12 @@ Aerocore is a flight controller for 3-inch FPV drones, built around an STM32F411
 |---|---|
 | MCU | STM32F411CEU6, 100MHz Cortex-M4, QFN48 |
 | IMU | Bosch BMI270, SPI |
-| Input power | 4S LiPo (up to ~60A absolute max draw, 15A per motor) |
-| Onboard rails | 5V (LMR51430 buck) → 3.3V (TLV75533 LDO) |
+| Input power | 4S LiPo (up to 60A absolute max draw, 15A per motor) |
+| Onboard rails | 5V (LMR51430 buck), 3.3V (TLV75533 LDO) |
 | USB | USB-C, USB2.0 full-speed |
 | Board | 4 layers, 36×36mm, 1.6mm thick |
 | Stackup | JLC04161H-7628 (1oz outer / 0.5oz inner copper) |
-| Mounting holes | 4× M2.5, 26.5×26.5mm spacing (non-standard — see notes) |
+| Mounting holes | 4× M2.5, 26.5×26.5mm spacing|
 
 ## Repo layout
 
