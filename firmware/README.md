@@ -1,33 +1,69 @@
 # Firmware
 
-- Not started yet, the hardware needs to come back from JLCPCB and go through testing first (power rails, IMU communication over SPI) before it makes sense to write flight code against it.
+Bare-metal firmware for the Aerocore flight controller using the STM32F411 and BMI270.
 
-- Might start writing some useful code that I can use later on (SPI communication, UART and so on)
+## Current Status
 
-## Planned approach
+* STM32F411 project created.
+* 16 MHz external crystal configured.
+* PLL configured for 100 MHz system clock.
+* APB1 configured to 50 MHz and APB2 to 100 MHz.
+* PB3 LED tested at 100 MHz.
+* ST-LINK working for flashing and debugging.
 
-- Bare-metal , mainly so I actually understand what's happening at the register level rather than dropping straight into an existing flight stack.
-- Configure the STM32 to use the HSE (16MHZ crystal) and generate a higher fequency (100 MHZ) using PLL .
-- BMI270 driver over SPI1, reading gyro + accel via the interrupt pins (PA1, PB0).
-- ADM to transfer measured data to RAM.
-- standard PWM output on TIM4 for the 4 ESCs, probably start with plain PWM since it's simpler to get right first, move to DShot later.
-- USART2 for ELRS receiver input.
-- USB-C for serial output, need to remember this board has no VBUS sensing wired up, so USB init needs to explicitly disable VBUS detection rather than wait on it.
-- ST-LINK for configuration/flashing
-- Eventually: basic rate/angle mode flight control loop, once sensor fusion and motor output are both confirmed working independently.
+## Planned Approach
+
+* Bare-metal C to learn how the STM32 works at the register level.
+* SPI1 for the BMI270.
+* DMA for transferring data.
+* TIM4 PWM for the 4 ESCs.
+* USART2 for the ELRS receiver.
+* USB-C for serial communication.
+* Eventually add sensor fusion and basic flight control.
 
 ## Toolchain
 
-- STM32CubeMX used only to generate the initial STM32CubeIDE project files.
-- STM32CubeIDE used for writing, building, and debugging the firmware. Peripheral/pin configuration is done manually in code rather than through CubeMX.
-- ARM GNU Toolchain compiler/toolchain used by STM32CubeIDE to build the firmware.
-- ST-LINK over SWD used to flash and debug the firmware on the Aerocore PCB.
+* STM32CubeMX — used only to generate the initial project files.
+* STM32CubeIDE — used to write, build, and debug the firmware.
+* ARM GNU Toolchain — used to compile the firmware.
+* ST-LINK — used to flash and debug the PCB.
 
 ## Tasks
 
-[X] Create a Project using STM32CubeMX (No pins are configured in this stage)
+**Clock**
 
-**SPI Configuration**
-[] Configure SPI
-[] Write Read Functions
-[] integrate ADM
+* [x] Configure 16 MHz HSE
+* [x] Configure 100 MHz PLL
+* [x] Test clock using PB3 LED
+
+**USB-C**
+
+* [ ] Configure USB
+* [ ] Test serial communication
+
+**SPI / BMI270**
+
+* [ ] Configure SPI
+* [ ] Write SPI read/write functions
+* [ ] Read BMI270 data
+* [ ] Add DMA
+
+**ESCs**
+
+* [ ] Configure TIM4 PWM
+* [ ] Test all 4 motors
+* [ ] Try DShot later
+
+**ELRS**
+
+* [ ] Configure USART2
+* [ ] Read CRSF data
+* [ ] Decode channels
+
+**Flight Control**
+
+* [ ] Sensor fusion
+* [ ] Rate control
+* [ ] Angle control
+* [ ] Motor mixing
+
