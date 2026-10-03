@@ -33,13 +33,13 @@ Bare-metal firmware for the Aerocore flight controller using the STM32F411 and B
 **Clock**
 
 * [x] Configure 16 MHz HSE
-* [x] Configure 100 MHz PLL
+* [x] Configure 96 MHz PLL
 * [x] Test clock using PB3 LED
 
 **USB-C**
 
-* [ ] Configure USB
-* [ ] Test serial communication
+* [X] Configure USB
+* [X] Test serial communication
 
 **SPI / BMI270**
 
