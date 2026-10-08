@@ -11,7 +11,7 @@
  * This file contains the function declaration for configuring
  * the STM32F411 system clock. The external 16 MHz crystal is
  * used as the clock source and the PLL is configured to generate
- * a 100 MHz system clock.
+ * a 96 MHz system clock.
  *
  * @author Mohammed Kassem
  * @date 03/10/2026
@@ -28,14 +28,27 @@
  * configures the PLL, and switches the system clock to the
  * PLL output.
  *
- * Clock calculation:
  * 16 MHz / 16 = 1 MHz
- * 1 MHz * 200 = 200 MHz
- * 200 MHz / 2 = 100 MHz
+ * 1 MHz * 192 = 192 MHz
+ * 200 MHZ / 2 = 96 MHz (system clock)
+ * 192 MHZ / 4 = 48 MHZ (USB clock)
  *
- * APB1 is configured to 50 MHz and APB2 is configured
- * to 100 MHz.
+ * APB1 is configured to 48 MHz and APB2 is configured
+ * to 96 MHz.
  */
-void clock_100MHz(void);
+void clock_96MHz(void);
+
+/** CPU clock frequency in Hz */
+#define CPU_HZ  96000000.0f
+
+/**
+ * @brief Starts the DWT cycle counter
+ *
+ * This function enables the trace unit, resets the cycle counter
+ * to zero and starts it. DWT->CYCCNT then increases by one on every
+ * CPU clock cycle. It must be called once at startup, before
+ * bmi_init(), because the BMI270 interrupt handler reads the counter.
+ */
+void dwt_init(void);
 
 #endif /* CLK_SPEED_H */
