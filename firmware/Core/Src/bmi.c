@@ -67,6 +67,11 @@
 #define REG_INT1_IO_CTRL    0x53
 #define REG_INT_MAP_DATA    0x58
 
+volatile uint8_t  imu_ready  = 0;
+volatile uint32_t imu_cycles = 0;
+volatile float    imu_gyro[3];     // dps
+volatile float    imu_accel[3];    // g
+
 
 void spi_BMI_pin_config(void)
 {
@@ -197,8 +202,6 @@ void bmi_load_config(void)
     HAL_Delay(150);
 }
 
-volatile uint8_t  imu_ready = 0;
-volatile uint32_t imu_stamp = 0;
 
 void bmi_int_init(void)
 {
@@ -227,10 +230,7 @@ void bmi_int_init(void)
     DWT->CYCCNT = 0;                            // first interval starts here
 }
 
-volatile uint8_t  imu_ready  = 0;
-volatile uint32_t imu_cycles = 0;
-volatile float    imu_gyro[3];     // dps
-volatile float    imu_accel[3];    // g
+
 
 void EXTI1_IRQHandler(void)
 {
