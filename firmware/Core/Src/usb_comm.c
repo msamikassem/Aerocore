@@ -42,9 +42,12 @@ static volatile uint16_t rx_tail = 0;
 // transfer is finished, so it can't be a local variable
 static uint8_t tx_buf[TX_BUF_SIZE];
 
+/* Forces float support in printf (needed for %f with nano.specs) */
+__asm__(".global _printf_float");
 
 void usb_init(void)
 {
+
     // Start HAL (SysTick still runs from the 16 MHz HSI here)
     HAL_Init();
 
