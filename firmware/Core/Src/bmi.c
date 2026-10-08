@@ -61,7 +61,7 @@
 
 // Sensitivity
 #define ACC_LSB_PER_G       8192.0f     // +-4g
-#define GYR_LSB_PER_DPS     131.2f      // +-250 dps
+#define GYR_LSB_PER_DPS     16.4f      // +-2000 dps
 
 //interrupt
 #define REG_INT1_IO_CTRL    0x53
@@ -276,7 +276,7 @@ uint8_t bmi_init(void)
     bmi_write_reg(REG_ACC_CONF, 0xAC);      // 1600 Hz, normal bandwidth, performance mode
     bmi_write_reg(REG_ACC_RANGE, 0x01);     // +-4g
     bmi_write_reg(REG_GYR_CONF, 0xEC);      // 1600 Hz, performance mode
-    bmi_write_reg(REG_GYR_RANGE, 0x03);     // +-250 dps
+    bmi_write_reg(REG_GYR_RANGE, 0x00);     // +-2000 dp
     HAL_Delay(1);
 
     // 4. Turn on gyro (bit 1) and accel (bit 2)
