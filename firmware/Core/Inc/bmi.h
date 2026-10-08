@@ -10,10 +10,15 @@
  *
  * This file contains the function declarations for the BMI270
  * accelerometer and gyroscope. The sensor is connected to SPI1
- * (PA4 = CS, PA5 = SCK, PA6 = MISO, PA7 = MOSI).
+ * (PA4 = CS, PA5 = SCK, PA6 = MISO, PA7 = MOSI). The data-ready
+ * interrupt pin INT1 is connected to PA1 (EXTI line 1).
  *
  * Accelerometer: +-4g (8192 LSB/g), output rate 1600 Hz
- * Gyroscope: +-250 dps (131.2 LSB/dps), output rate 3200 Hz
+ * Gyroscope: +-250 dps (131.2 LSB/dps), output rate 1600 Hz
+ *
+ * Every time a new sample is ready, the BMI270 raises INT1. The
+ * interrupt handler reads the sensor, stores the data and the number
+ * of clock cycles since the previous sample, and sets imu_ready.
  *
  * @author Mohammed Kassem
  * @date 04/10/2026
@@ -31,6 +36,18 @@
 /** BMI270 configuration file (defined in bmi_config.c) */
 extern const uint8_t bmi270_config_file[BMI270_CONFIG_SIZE];
 
+/** Set to 1 by the interrupt when new data is ready. Clear it after use */
+extern volatile uint8_t  imu_ready;
+
+/** CPU clock cycles (DWT->CYCCNT) since the previous interrupt */
+extern volatile uint32_t imu_cycles;
+
+/** Latest gyroscope data p, q, r in degrees per second */
+extern volatile float    imu_gyro[3];
+
+/** Latest accelerometer data ax, ay, az in g */
+extern volatile float    imu_accel[3];
+
 /**
  * @brief Sets up the SPI pins and SPI1, then reads the BMI270 CHIP_ID
  *
@@ -46,12 +63,33 @@ uint8_t verify_bmi(void);
  * @brief Initializes the BMI270
  *
  * This function checks the CHIP_ID, uploads the configuration file,
- * configures the accelerometer and gyroscope and turns them on.
- * It must be called once at startup before reading any data.
+ * configures the accelerometer and gyroscope, turns them on and
+ * sets up the data-ready interrupt. It must be called once at
+ * startup before reading any data. The DWT cycle counter must be
+ * started before calling it.
  *
  * @return 1 if the initialization worked, 0 if it failed
  */
 uint8_t bmi_init(void);
+
+/**
+ * @brief Sets up the data-ready interrupt
+ *
+ * This function configures the BMI270 INT1 pin (active high,
+ * push-pull, data-ready) and sets up PA1 as a rising edge external
+ * interrupt (EXTI1). It is called by bmi_init().
+ */
+void bmi_int_init(void);
+
+/**
+ * @brief Interrupt handler for EXTI line 1 (BMI270 INT1)
+ *
+ * This function runs every time a new sample is ready. It stores
+ * the clock cycles since the last interrupt in imu_cycles and
+ * resets the cycle counter. It then reads the accelerometer and
+ * gyroscope into imu_accel and imu_gyro and sets imu_ready to 1.
+ */
+void EXTI1_IRQHandler(void);
 
 /**
  * @brief Reads one BMI270 register

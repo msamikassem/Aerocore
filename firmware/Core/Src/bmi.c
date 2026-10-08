@@ -63,6 +63,10 @@
 #define ACC_LSB_PER_G       8192.0f     // +-4g
 #define GYR_LSB_PER_DPS     131.2f      // +-250 dps
 
+//interrupt
+#define REG_INT1_IO_CTRL    0x53
+#define REG_INT_MAP_DATA    0x58
+
 
 void spi_BMI_pin_config(void)
 {
@@ -193,6 +197,55 @@ void bmi_load_config(void)
     HAL_Delay(150);
 }
 
+volatile uint8_t  imu_ready = 0;
+volatile uint32_t imu_stamp = 0;
+
+void bmi_int_init(void)
+{
+    // Sensor side: INT1 = output, active high, push-pull; data-ready -> INT1
+    bmi_write_reg(REG_INT1_IO_CTRL, 0x0A);
+    bmi_write_reg(REG_INT_MAP_DATA, 0x04);
+
+    // MCU side: PA1 as input, rising edge interrupt (EXTI1)
+    RCC->AHB1ENR |= (1U<<0);                    // GPIOA clock (already on, harmless)
+    RCC->APB2ENR |= (1U<<14);                   // SYSCFG clock
+    GPIOA->MODER &= ~(3U<<2);                   // PA1 = input (00)
+
+    SYSCFG->EXTICR[0] &= ~(0xFU<<4);            // EXTI1 -> port A (0000)
+    EXTI->RTSR |=  (1U<<1);                     // rising edge
+    EXTI->IMR  |=  (1U<<1);                     // unmask line 1
+
+    NVIC_EnableIRQ(EXTI1_IRQn);
+}
+
+volatile uint8_t  imu_ready  = 0;
+volatile uint32_t imu_cycles = 0;
+volatile float    imu_gyro[3];     // dps
+volatile float    imu_accel[3];    // g
+
+void EXTI1_IRQHandler(void)
+{
+    if (EXTI->PR & (1U<<1))
+    {
+        EXTI->PR = (1U<<1);
+
+        imu_cycles = DWT->CYCCNT;      // clocks since the last interrupt
+        DWT->CYCCNT = 0;               // restart for the next interval
+
+        float a[3], g[3];
+        bmi_read_accel_g(&a[0], &a[1], &a[2]);
+        bmi_read_gyro_dps(&g[0], &g[1], &g[2]);
+
+        for (int i = 0; i < 3; i++)
+        {
+            imu_accel[i] = a[i];
+            imu_gyro[i]  = g[i];
+        }
+
+        imu_ready = 1;
+    }
+}
+
 uint8_t bmi_init(void)
 {
     // 1. Pins + SPI + SPI wake up + check we are talking to a BMI270
@@ -220,6 +273,8 @@ uint8_t bmi_init(void)
     // 4. Turn on gyro (bit 1) and accel (bit 2)
     bmi_write_reg(REG_PWR_CTRL, 0x06);
     HAL_Delay(50);
+
+    bmi_int_init();
 
     return 1;
 }
