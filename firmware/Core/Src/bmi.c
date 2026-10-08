@@ -215,7 +215,16 @@ void bmi_int_init(void)
     EXTI->RTSR |=  (1U<<1);                     // rising edge
     EXTI->IMR  |=  (1U<<1);                     // unmask line 1
 
+    // Read once to clear any data that is already waiting, so INT1 goes low
+    int16_t x, y, z;
+    bmi_read_accel(&x, &y, &z);
+    bmi_read_gyro(&x, &y, &z);
+
+    EXTI->PR = (1U<<1);                         // clear any edge caught meanwhile
+
     NVIC_EnableIRQ(EXTI1_IRQn);
+
+    DWT->CYCCNT = 0;                            // first interval starts here
 }
 
 volatile uint8_t  imu_ready  = 0;
@@ -266,7 +275,7 @@ uint8_t bmi_init(void)
     HAL_Delay(1);
     bmi_write_reg(REG_ACC_CONF, 0xAC);      // 1600 Hz, normal bandwidth, performance mode
     bmi_write_reg(REG_ACC_RANGE, 0x01);     // +-4g
-    bmi_write_reg(REG_GYR_CONF, 0xED);      // 3200 Hz, performance mode
+    bmi_write_reg(REG_GYR_CONF, 0xEC);      // 1600 Hz, performance mode
     bmi_write_reg(REG_GYR_RANGE, 0x03);     // +-250 dps
     HAL_Delay(1);
 
@@ -274,6 +283,7 @@ uint8_t bmi_init(void)
     bmi_write_reg(REG_PWR_CTRL, 0x06);
     HAL_Delay(50);
 
+    // 5. Data-ready interrupt
     bmi_int_init();
 
     return 1;
