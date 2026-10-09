@@ -599,12 +599,37 @@ static void correct(Attitude *att, const float accel_raw[3])
 
     /*
      * Measurement noise R
+     *
+     * If the accelerometer magnitude is not close to 1 g, the drone is
+     * accelerating and the accelerometer angles are unreliable, so
+     * R is increased (the filter trusts the gyro more).
      */
 
+    // Total acceleration magnitude (should be about 1g when still)
+    float norm = sqrtf(accel[0] * accel[0] +
+                       accel[1] * accel[1] +
+                       accel[2] * accel[2]);
+
+    // Error from expected 1g acceleration
+    float e = (norm - 1.0f) / 0.02f;
+
+    // Largest angle error (about 10 degrees = 0.17 rad)
+    float ie = fmaxf(fabsf(y[0]), fabsf(y[1])) / 0.17f;
+
+    // Increase distrust when accel data looks wrong
+    float r_scale = 1.0f + e * e + ie * ie;
+
+    // Limit maximum distrust
+    if (r_scale > 50.0f)
+    {
+        r_scale = 50.0f;
+    }
+
+    // Measurement noise matrix (larger = trust accel less)
     float R[2][2] =
     {
-        {3e-3f, 0.0f},
-        {0.0f, 3e-3f}
+        {3e-2f * r_scale, 0.0f},
+        {0.0f,            3e-2f * r_scale}
     };
 
 

@@ -53,7 +53,7 @@ Bare-metal firmware for the Aerocore flight controller using the STM32F411 and B
 * [x] Load BMI270 config file
 * [x] Read BMI270 data
 * [x] Convert raw data to g and dps
-* [ ] Calibrate gyro offset
+* [X] Calibrate gyro offset
 * [ ] Add DMA
 
 **ESCs**
@@ -70,7 +70,7 @@ Bare-metal firmware for the Aerocore flight controller using the STM32F411 and B
 
 **Flight Control**
 
-* [ ] Sensor fusion
+* [X] Sensor fusion
 * [ ] Rate control
 * [ ] Angle control
 * [ ] Motor mixing
