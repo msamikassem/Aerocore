@@ -129,7 +129,9 @@ A level drone can still read about 0.5 to 1.5 degrees because of mounting error 
 
 ## Timing
 
-The filter needs the real time between samples. The BMI270 raises INT1 on every new sample (1600 Hz), and the interrupt handler measures the CPU cycles since the previous sample with the DWT counter: `dt = cycles / 96 MHz`. The first sample after startup is skipped if dt is above 0.1 s.
+The filter needs the real time between samples. The BMI270 raises INT1 on every new sample (1600 Hz), and the interrupt handler measures the CPU cycles since the previous sample with the DWT counter: `dt = cycles / 96 MHz`. The counter is reset at the end of `bmi_int_init()`, so the first interval is a normal one.
+
+The IMU interrupt (EXTI1) has priority 1 and the radio UART interrupt has priority 0. The UART interrupt can therefore run during the IMU handler's SPI read, so no radio bytes are lost (see `Radio.md`).
 
 ## Known limitations
 

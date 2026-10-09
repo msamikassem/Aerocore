@@ -167,7 +167,7 @@ Problems I ran into while building the Aerocore firmware and how I solved them.
 **Fix:**
 
 * At the end of `bmi_int_init()`: read accel and gyro once to clear waiting data, clear `EXTI->PR`, enable the interrupt, then set `DWT->CYCCNT = 0`.
-* Kept a `DT_MAX` check in `main.c` that skips any sample with dt above 0.1 s.
+* Used a `DT_MAX` check (skip any sample with dt above 0.1 s) while testing. The final `main.c` does not need it, because the counter is reset at the end of `bmi_int_init()`.
 * Deleted the old definitions so each variable and the handler exist only once.
 
 **What I learned:**
@@ -177,7 +177,29 @@ Problems I ran into while building the Aerocore firmware and how I solved them.
 
 ## Attitude EKF
 
-### 8. Small angle offset at rest
+### 8. Roll read about 180 degrees when level
+
+**Date:** 10/09/2026
+
+**Problem:**
+
+* The EKF assumes Z points down, so a level board reads az = -1 g.
+* The BMI270 reads az = +1 g when flat, so roll came out near 178 degrees.
+
+**Fix:**
+
+* Changed `imu_to_body()` to flip Y and Z (a 180 degree rotation about X). It is applied to both the gyro and the accelerometer.
+
+**Result:**
+
+* Level now reads roll about -1.5 degrees, pitch about 1 degree.
+
+**What I learned:**
+
+* Flipping only one axis makes a mirror image (left-handed frame). Flip two axes to get a real rotation.
+* Check the direction with tilt tests (right side down gives positive roll, nose up gives positive pitch).
+
+### 9. Small angle offset at rest
 
 **Date:** 10/09/2026
 
@@ -198,7 +220,7 @@ Problems I ran into while building the Aerocore firmware and how I solved them.
 
 * A 0.5 to 1.5 degree static error is normal, and a flight controller removes it with a level calibration.
 
-### 9. Shaking the drone corrupts the angle
+### 10. Shaking the drone corrupts the angle
 
 **Date:** 10/09/2026
 
@@ -231,6 +253,104 @@ Problems I ran into while building the Aerocore firmware and how I solved them.
 * Do not assume the print rate. I misjudged the recovery time because I guessed how often lines were printed. Print a timestamp with the data.
 * Hand shaking on the ground is harsher than flight. For real flight, motor vibration will be the bigger accelerometer problem.
 
+## Radio Receiver (UART + CRSF)
+
+### 11. Radio channels printed nothing once the EKF was in the program
+
+**Date:** 10/09/2026
+
+**Problem:**
+
+* An older program with only the radio worked (UART + CRSF, 16 MHz clock).
+* After combining it with the EKF and the 96 MHz clock, nothing printed.
+
+**Cause (several faults together):**
+
+* `UART2_init()` was never called. The line `void UART2_init(void);` inside `main()` is only a declaration.
+* The baud rate was calculated for 16 MHz. After `clock_96MHz()`, USART2 runs from APB1 at 48 MHz, so the real baud rate was about three times too high.
+* The init order was wrong: the UART must be set up after the clock is final.
+* The main loop read one UART byte per IMU sample (1600 per second), but about 6500 bytes per second arrive (one every 24 us). The USART holds one byte, so the others were overwritten, and a CRSF packet needs all of its bytes in order.
+* `UART2_read()` blocks until a byte arrives, which also stalled the EKF.
+* Once the receive interrupt was on, no function named `USART2_IRQHandler` existed in the project, so the first byte would hang the program in the default handler. After adding it, `UART2_read()` could not be used at the same time, because the handler empties the data register first.
+
+**Fix:**
+
+* Removed the stray declarations and called `UART2_init()` after `usb_init()`.
+* Set `SYS_CLK` in `uart.c` to 48 MHz, which gives BRR = 114 (about 421053 baud).
+* Receive bytes in `USART2_IRQHandler`: it feeds each byte to `CRSF_process_byte()` and sets `rc_ready` when a full RC packet has been decoded. The main loop only checks `rc_ready`.
+* USART2 interrupt priority 0, IMU interrupt (EXTI1) priority 1, so a radio byte is never lost while the IMU handler reads the sensor over SPI.
+
+**Result:**
+
+* A test program printed the real values: `pclk1 = 48000000`, `brr = 114`.
+* About 3270 bytes and 123 RC packets every half second (about 246 packets per second), with the error counter staying at 4 after startup.
+* Channels read 992 for the centered sticks and 174 for low throttle.
+
+**What I learned:**
+
+* A function declaration is not a call.
+* Peripheral clocks change when the system clock changes. Print the real clock (`HAL_RCC_GetPCLK1Freq()`) instead of assuming it.
+* A one-byte receiver needs an interrupt (or DMA) as soon as the loop does anything slow.
+* Counters (bytes, errors, packets) printed together show quickly if the fault is wiring, baud rate or parsing.
+* Changing several things at once means I cannot say which one fixed it.
+
+### 12. Build errors when moving the handler into uart.c
+
+**Date:** 10/09/2026
+
+**Problem:**
+
+* "implicit declaration of function CRSF_process_byte" in `uart.c`.
+* Then "multiple definition of rc_ready" from the linker.
+
+**Cause:**
+
+* `uart.c` did not include `crsf.h`.
+* `rc_ready` was defined (not just declared) in `uart.h`, so every file including the header got its own copy.
+
+**Fix:**
+
+* Added `#include "crsf.h"` to `uart.c`.
+* The header only has `extern volatile uint8_t rc_ready;`, and the one definition (with the value) is in `uart.c`.
+
+**What I learned:**
+
+* A header declares (`extern`), and exactly one `.c` file defines.
+
+### 13. CRSF channel range is not 0 to 2047
+
+**Date:** 10/09/2026
+
+**Problem:**
+
+* The old throttle mapping used 0 to 2047, but the printed minimum throttle was 174.
+
+**Fix:**
+
+* Clamp the value to 172 to 1811 and map that range to 1000 to 2000 us. Without it, minimum throttle gives about 1085 us instead of 1000 us, so the motors would idle slightly on.
+* The min and max are the usual CRSF values. They still have to be checked against my own radio by moving the sticks to the ends.
+
+**What I learned:**
+
+* Read the real numbers from the radio before choosing a mapping.
+
+### 14. Detecting a lost radio link
+
+**Date:** 10/09/2026
+
+**Problem:**
+
+* `rc_ready` is cleared after every packet, so `rc_ready == 0` is the normal state between packets (about 4 ms at 250 Hz). It cannot show a lost link.
+
+**Fix:**
+
+* Store the time of the last decoded RC packet (`rc_last_tick`) and compare it with `HAL_GetTick()`. If the packet is older than a timeout (500 ms to start with), the link is treated as lost and the failsafe applies.
+
+**What I learned:**
+
+* A flag says "something happened". A lost link needs a timestamp and a timeout.
+* The timeout only works if the ELRS receiver stops sending RC packets when the link is lost. If it is set to send fixed failsafe values, the packets never stop.
+
 ## Checked Results
 
 | Test | Result |
@@ -243,6 +363,9 @@ Problems I ran into while building the Aerocore firmware and how I solved them.
 | Gyroscope calibrated, board still | within about +-0.3 dps on all axes, average near 0 |
 | EKF, board level (before trim) | roll about -1.5 deg, pitch about 1 deg |
 | EKF, hard shake on ground | roll swing about +-8 deg, pitch under 1 deg |
+| USART2 clock / baud rate | PCLK1 = 48 MHz, BRR = 114 (about 421053 baud) |
+| Radio receive rate | about 246 RC packets per second, about 6500 bytes per second |
+| Radio sticks centered / throttle low | 992 / 174 |
 
 The small accelerometer X offset and the gyroscope noise are normal for an IMU at rest.
 
@@ -253,4 +376,10 @@ The small accelerometer X offset and the gyroscope noise are normal for an IMU a
 * `S = H P H^T + R` is computed as `H P + R`. It works only because H selects the first two states, and it must change if H changes.
 * Mount the flight controller on foam or rubber and check the BMI270 filter bandwidth settings, since motor vibration will affect the accelerometer.
 * Store the gyro offsets and the level trim in flash so they survive power cycles.
+* Add the CRC check to the CRSF parser. Right now a corrupted packet with the right length and type would be decoded.
+* Add the radio link timeout (problem 14) to `main.c` and set the ELRS failsafe mode so that RC packets stop when the link is lost.
+* Check the real minimum and maximum of every channel on my radio (CRSF_MIN and CRSF_MAX are the usual values).
+* Check `pwm.c`: it was written for the 16 MHz clock, and TIM4 sits on APB1, which runs at 48 MHz now, so the ESC pulse widths must be recalculated before connecting a motor.
+* Measure the EKF update time and count IMU overruns (the main loop must finish a sample before the next interrupt).
+* Build with optimization (-O2 or the Release configuration).
 * Test the filter in flight.
