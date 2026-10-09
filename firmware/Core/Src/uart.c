@@ -22,6 +22,7 @@
 #include "stm32f4xx.h"
 #include "uart.h"
 #include <stdint.h>
+#include "crsf.h"        // add this
 
 
 // Clock and baud rate
@@ -34,6 +35,7 @@
 #define PIN_RX      3U      // PA3 = USART2_RX
 #define AF_USART2   7U      // alternate function 7 (AF07)
 
+volatile uint8_t rc_ready = 0;
 
 void UART2_init(void)
 {
@@ -58,6 +60,10 @@ void UART2_init(void)
 
     // Enable transmitter, receiver and the USART
     USART2->CR1 = USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
+
+    USART2->CR1 |= USART_CR1_RXNEIE;       // interrupt when a byte is received
+    NVIC_SetPriority(USART2_IRQn, 0);
+    NVIC_EnableIRQ(USART2_IRQn);
 }
 
 
@@ -70,4 +76,17 @@ uint8_t UART2_read(void)
 
     // Reading DR also clears the RXNE flag
     return (uint8_t)USART2->DR;
+}
+
+void USART2_IRQHandler(void)
+{
+    if (USART2->SR & (USART_SR_RXNE | USART_SR_ORE))
+    {
+        uint8_t b = (uint8_t)USART2->DR;    /* reading DR clears the flags */
+
+        if (CRSF_process_byte(b))
+        {
+            rc_ready = 1;
+        }
+    }
 }
