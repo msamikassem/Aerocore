@@ -23,6 +23,8 @@
 
 /** Set to 1 by the receive interrupt when a new RC packet has been decoded. Clear it after use */
 extern volatile uint8_t rc_ready;
+extern volatile uint32_t rc_last_tick;
+extern volatile uint8_t  rc_seen;
 
 #include <stdint.h>
 

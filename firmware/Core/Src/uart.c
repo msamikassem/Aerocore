@@ -35,7 +35,9 @@
 #define PIN_RX      3U      // PA3 = USART2_RX
 #define AF_USART2   7U      // alternate function 7 (AF07)
 
-volatile uint8_t rc_ready = 0;
+volatile uint8_t  rc_ready = 0;
+volatile uint32_t rc_last_tick = 0;     // time (ms) of the last decoded RC packet
+volatile uint8_t  rc_seen = 0;          // 1 after the first packet
 
 void UART2_init(void)
 {
@@ -82,11 +84,13 @@ void USART2_IRQHandler(void)
 {
     if (USART2->SR & (USART_SR_RXNE | USART_SR_ORE))
     {
-        uint8_t b = (uint8_t)USART2->DR;    /* reading DR clears the flags */
+        uint8_t b = (uint8_t)USART2->DR;
 
         if (CRSF_process_byte(b))
         {
             rc_ready = 1;
+            rc_last_tick = HAL_GetTick();
+            rc_seen = 1;
         }
     }
 }

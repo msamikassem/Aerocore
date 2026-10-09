@@ -38,6 +38,9 @@
 /** Size of the packet buffer in bytes */
 #define CRSF_MAX_PACKET_SIZE    64U
 
+#define RC_TIMEOUT_MS   500U
+
+
 /**
  * @brief Feeds one received byte to the CRSF parser
  *
