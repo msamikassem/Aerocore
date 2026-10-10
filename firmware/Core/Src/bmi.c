@@ -224,8 +224,9 @@ void bmi_int_init(void)
     bmi_read_gyro(&x, &y, &z);
 
     EXTI->PR = (1U<<1);                         // clear any edge caught meanwhile
+    NVIC_SetPriority(EXTI1_IRQn, 1);
+    NVIC_EnableIRQ(EXTI1_IRQn);
 
-    NVIC_EnableIRQ(EXTI1_IRQn,1);
 
     DWT->CYCCNT = 0;                            // first interval starts here
 }
