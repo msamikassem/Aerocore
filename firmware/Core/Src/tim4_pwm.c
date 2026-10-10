@@ -54,8 +54,8 @@ void tim4_pwm(void)
     // 1 timer count = 1 us
     TIM4->PSC = 95;
 
-    // 20 ms period = 50 Hz
-    TIM4->ARR = 19999;
+    // 400 Hz
+    TIM4->ARR = 2499;
 
     // Start all channels at 1 ms
     TIM4->CCR1 = 1000;
