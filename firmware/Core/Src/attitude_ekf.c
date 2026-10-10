@@ -848,3 +848,11 @@ float attitude_get_pitch_bias(const Attitude *att)
 {
     return att->x[S_BIAS_PITCH];
 }
+
+void attitude_get_rates(const Attitude *att, const float gyro_raw[3], float rates[3])
+{
+    float g[3];
+    imu_to_body(gyro_raw, g);
+    for (int i = 0; i < 3; i++)
+        rates[i] = g[i] - att->gyro_offset[i];
+}

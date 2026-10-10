@@ -174,4 +174,6 @@ float attitude_get_roll_bias(const Attitude *att);
  */
 float attitude_get_pitch_bias(const Attitude *att);
 
+void attitude_get_rates(const Attitude *att, const float gyro_raw[3], float rates[3]);
+
 #endif /* ATTITUDE_EKF_H */
