@@ -225,7 +225,7 @@ void bmi_int_init(void)
 
     EXTI->PR = (1U<<1);                         // clear any edge caught meanwhile
 
-    NVIC_EnableIRQ(EXTI1_IRQn);
+    NVIC_EnableIRQ(EXTI1_IRQn,1);
 
     DWT->CYCCNT = 0;                            // first interval starts here
 }
