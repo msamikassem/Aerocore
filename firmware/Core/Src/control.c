@@ -88,14 +88,16 @@ void control_update(Control *c, const ControlInput *in, float dt, float motor[4]
      *   raising the throttle does not disarm it).
      */
 
-    if (in->rc[CH_ARM - 1] > SWITCH_HIGH)
-    {
-        c->armed = 1; //ready to fly
-    }
-    else if (throttle < THROTTLE_MIN)
-    {
-        c->armed = 0;
-    }
+     // Arm switch OFF always disarms
+     if (in->rc[CH_ARM - 1] <= SWITCH_HIGH)
+     {
+    	 c->armed = 0;
+     }
+     // Only allow arming when throttle is low
+     else if (!c->armed && throttle < THROTTLE_MIN)
+     {
+    	 c->armed = 1;
+     }
 
 
     /*
