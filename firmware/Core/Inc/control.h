@@ -38,16 +38,16 @@
  * MOTOR LAYOUT (quad X, seen from above)
  *
  *          FRONT
- *     M4 (CCW)  M2 (CW)
+ *     M4 (CW)  M2 (CCW)
  *          \    /
  *           \  /
  *           /  \
  *          /    \
- *     M3 (CW)   M1 (CCW)
+ *     M3 (CCW)   M1 (CW)
  *          REAR
  *
- *   M1 = rear right (CCW)    M2 = front right (CW)
- *   M3 = rear left  (CW)     M4 = front left  (CCW)
+ *   M1 = rear right (CW)      M2 = front right (CCW)
+ *   M3 = rear left  (CCW)     M4 = front left  (CW)
  *
  * @author Mohammed Kassem
  * @date 10/10/2026

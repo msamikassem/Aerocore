@@ -197,17 +197,17 @@ void control_update(Control *c, const ControlInput *in, float dt, float motor[4]
      *
      *   Motor            roll   pitch   yaw
      *   M1 rear  right    -      -      +
-     *   M2 front right    -      +      -
+     *   M2 front right    -      +      +
      *   M3 rear  left     +      -      -
-     *   M4 front left     +      +      +
+     *   M4 front left     +      +      -
      * ============================================================ */
 
     float base = MOTOR_IDLE + throttle * (1.0f - MOTOR_IDLE);
 
-    motor[0] = base - roll_cmd - pitch_cmd + yaw_cmd;   // M1 rear right,  CCW
-    motor[1] = base - roll_cmd + pitch_cmd - yaw_cmd;   // M2 front right, CW
-    motor[2] = base + roll_cmd - pitch_cmd - yaw_cmd;   // M3 rear left,   CW
-    motor[3] = base + roll_cmd + pitch_cmd + yaw_cmd;   // M4 front left,  CCW
+    motor[0] = base - roll_cmd - pitch_cmd + yaw_cmd;   // M1 rear right,  CW
+    motor[1] = base - roll_cmd + pitch_cmd + yaw_cmd;   // M2 front right, CCW
+    motor[2] = base + roll_cmd - pitch_cmd - yaw_cmd;   // M3 rear left,   CCW
+    motor[3] = base + roll_cmd + pitch_cmd - yaw_cmd;   // M4 front left,  CW
 
 
     /*
