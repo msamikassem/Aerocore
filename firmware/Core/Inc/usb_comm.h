@@ -126,4 +126,6 @@ uint8_t usb_read_line(char *buf, uint16_t size);
  */
 void usb_rx_callback(uint8_t *buf, uint32_t len);
 
+uint8_t usb_tx_ready(void);
+
 #endif /* USB_COMM_H */

@@ -253,3 +253,9 @@ void usb_rx_callback(uint8_t *buf, uint32_t len)
         }
     }
 }
+
+uint8_t usb_tx_ready(void)
+{
+    USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef *)hUsbDeviceFS.pClassData;
+    return (hcdc != NULL && hcdc->TxState == 0);
+}
