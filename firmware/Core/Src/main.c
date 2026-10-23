@@ -1,6 +1,8 @@
 #include "main.h"
 
 uint8_t print_line = 0;         // which line of the debug block is printed next */
+uint32_t last_telemetry = 0;
+uint8_t tx_packet[10];
 Attitude att;
 Control ctrl;
 
@@ -55,6 +57,7 @@ int main(void)
                 attitude_update(&att, gyro, accel, dt);
                 attitude_get_rates(&att, gyro, rates);
 
+
                 roll_deg  = attitude_get_roll(&att)  * RAD2DEG;
                 pitch_deg = attitude_get_pitch(&att) * RAD2DEG;
 
@@ -85,6 +88,27 @@ int main(void)
                 for (int i = 0; i < 4; i++)
                 {
                     change_pwm(i + 1, motor[i]);
+                }
+
+                // Send attitude telemetry every 100 ms (10 Hz)
+                if ((HAL_GetTick() - last_telemetry) >= 100)
+                {
+                    last_telemetry = HAL_GetTick();
+
+                    float roll_rad  = attitude_get_roll(&att);
+                    float pitch_rad = attitude_get_pitch(&att);
+                    float yaw_rad   = rates[2];
+
+                    // Build the CRSF attitude packet
+                    uint8_t length = CRSF_build_attitude(
+                        tx_packet,
+                        roll_rad,
+                        pitch_rad,
+                        yaw_rad
+                    );
+
+                    // Send the packet through USART2
+                    UART2_send(tx_packet, length);
                 }
             }
         }
@@ -146,6 +170,7 @@ int main(void)
 
             switch (print_line)
             {
+            /*
                 case 0:
                     usb_printf("%s | mode %s | radio %s | thr %3d%%\r\n",
                                arm_text, mode_text, link_text, thr_percent);
@@ -160,13 +185,18 @@ int main(void)
                 	usb_printf("ax %6.3f  ay %6.3f  az %6.3f g\r\n",
                 	               accel[0], accel[1], accel[2]);
                 	break;
+                	*/
+                case 0:
 
+                	usb_printf("ptch %6.3f  roll %6.3f  yaw %6.3f g\r\n",
+                			attitude_get_roll(&att), attitude_get_pitch(&att), rates[2]);
+                	                	break;
 
             }
 
             print_line++;
 
-            if (print_line >= 3)
+            if (print_line >= 1)
             {
                 print_line = 0;
             }
