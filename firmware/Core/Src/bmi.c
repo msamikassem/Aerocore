@@ -286,9 +286,9 @@ uint8_t bmi_init(void)
     // 3. Settings
     bmi_write_reg(REG_PWR_CONF, 0x00);      // advanced power save OFF
     HAL_Delay(1);
-    bmi_write_reg(REG_ACC_CONF, 0x28);      // 800 Hz Odr, OSR4 filter mode (tighter bandwidth)
+    bmi_write_reg(REG_ACC_CONF, 0x28);      // 800 Hz
     bmi_write_reg(REG_ACC_RANGE, 0x01);     // +-4g
-    bmi_write_reg(REG_GYR_CONF, 0x2A);      // 800 Hz Odr, OSR4 filter mode (tighter bandwidth)
+    bmi_write_reg(REG_GYR_CONF, 0x2A);      // 800 Hz
     bmi_write_reg(REG_GYR_RANGE, 0x00);     // +-2000 dps
     HAL_Delay(1);
 
