@@ -4,7 +4,37 @@
 _autosave-*
 *.lck
 *~
+# KiCad backups / autosave / locks
+*-bak
+*.bak
+_autosave-*
+*.lck
+*~
 fp-info-cache
+
+# STM32CubeIDE workspace metadata
+.metadata/
+
+# STM32CubeIDE build output
+/firmware/Debug/
+
+# Local generated files
+/firmware.zip
+/firmware/firmware Debug.launch
+
+# Machine-specific CubeIDE settings
+/firmware/.settings/com.st.stm32cube.ide.mcu.sfrview.prefs
+/firmware/.settings/stm32cubeide.project.prefs
+
+# KiCad project-local settings (machine-specific, not useful to share)
+*.kicad_prl
+
+# 3D model cache
+*-cache.lib
+
+# OS junk
+.DS_Store
+Thumbs.dbfp-info-cache
 
 #CubeIDE
 *.metadata
