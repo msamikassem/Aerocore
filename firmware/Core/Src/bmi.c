@@ -46,7 +46,7 @@
 #define REG_GYR_X_LSB       0x12
 #define REG_INTERNAL_STATUS 0x21
 #define REG_ACC_CONF        0x40
-#define REG_ACC_RANGE       0x41
+#define REG_ACC_RANGE       0x02
 #define REG_GYR_CONF        0x42
 #define REG_GYR_RANGE       0x43
 #define REG_INIT_CTRL       0x59
@@ -60,7 +60,7 @@
 #define CONFIG_CHUNK        32U     // bytes sent per config file write
 
 // Sensitivity
-#define ACC_LSB_PER_G       8192.0f     // +-4g
+#define ACC_LSB_PER_G       4096.0f    // +-8g
 #define GYR_LSB_PER_DPS     16.4f      // +-2000 dps
 
 //interrupt
@@ -71,6 +71,7 @@ volatile uint8_t  imu_ready  = 0;
 volatile uint32_t imu_cycles = 0;
 volatile float    imu_gyro[3];     // dps
 volatile float    imu_accel[3];    // g
+
 
 
 void spi_BMI_pin_config(void)
@@ -239,8 +240,19 @@ void EXTI1_IRQHandler(void)
     {
         EXTI->PR = (1U<<1);
 
-        imu_cycles = DWT->CYCCNT;      // clocks since the last interrupt
-        DWT->CYCCNT = 0;               // restart for the next interval
+        if (imu_ready)
+        {
+
+            /* Keep the old interval and add the new one on top */
+            imu_cycles = imu_cycles + DWT->CYCCNT;
+        }
+        else
+        {
+            /* Normal case: main picked up the last sample, so this is a fresh interval */
+            imu_cycles = DWT->CYCCNT;
+        }
+
+        DWT->CYCCNT = 0;               /* restart the count for the next interval */
 
         float a[3], g[3];
         bmi_read_accel_g(&a[0], &a[1], &a[2]);
@@ -274,10 +286,10 @@ uint8_t bmi_init(void)
     // 3. Settings
     bmi_write_reg(REG_PWR_CONF, 0x00);      // advanced power save OFF
     HAL_Delay(1);
-    bmi_write_reg(REG_ACC_CONF, 0xAC);      // 1600 Hz, normal bandwidth, performance mode
+    bmi_write_reg(REG_ACC_CONF, 0x28);      // 800 Hz Odr, OSR4 filter mode (tighter bandwidth)
     bmi_write_reg(REG_ACC_RANGE, 0x01);     // +-4g
-    bmi_write_reg(REG_GYR_CONF, 0xEC);      // 1600 Hz, performance mode
-    bmi_write_reg(REG_GYR_RANGE, 0x00);     // +-2000 dp
+    bmi_write_reg(REG_GYR_CONF, 0x2A);      // 800 Hz Odr, OSR4 filter mode (tighter bandwidth)
+    bmi_write_reg(REG_GYR_RANGE, 0x00);     // +-2000 dps
     HAL_Delay(1);
 
     // 4. Turn on gyro (bit 1) and accel (bit 2)
