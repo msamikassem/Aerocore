@@ -157,3 +157,63 @@ void CRSF_get_channels(uint16_t output[16])
         output[i] = channels[i];
     }
 }
+
+/**
+ * @brief Calculate the CRSF CRC-8 checksum
+ */
+static uint8_t CRSF_crc8(const uint8_t *data, uint8_t length)
+{
+    uint8_t crc = 0;
+
+    for (uint8_t i = 0; i < length; i++)
+    {
+        crc ^= data[i];
+
+        for (uint8_t bit = 0; bit < 8; bit++)
+        {
+            if (crc & 0x80)
+            {
+                crc = (crc << 1) ^ 0xD5;
+            }
+            else
+            {
+                crc = crc << 1;
+            }
+        }
+    }
+
+    return crc;
+}
+
+
+
+uint8_t CRSF_build_attitude(uint8_t *packet, float roll_rad, float pitch_rad, float yaw_rad)
+{
+    // Convert radians to CRSF attitude units
+    int16_t roll  = (int16_t)(roll_rad  * 10000.0f);
+    int16_t pitch = (int16_t)(pitch_rad * 10000.0f);
+    int16_t yaw   = (int16_t)(yaw_rad   * 10000.0f);
+
+    // Packet header
+    packet[0] = CRSF_ADDRESS;  	// Flight controller address
+    packet[1] = 8;      		// Type + payload + CRC
+    packet[2] = CRSF_RC_TELEM;  // Attitude telemetry
+
+    // Pitch: high byte first
+    packet[3] = (uint8_t)(pitch >> 8);
+    packet[4] = (uint8_t)pitch;
+
+    // Roll: high byte first
+    packet[5] = (uint8_t)(roll >> 8);
+    packet[6] = (uint8_t)roll;
+
+    // Yaw: high byte first
+    packet[7] = (uint8_t)(yaw >> 8);
+    packet[8] = (uint8_t)yaw;
+
+    // CRC covers the type and payload
+    packet[9] = CRSF_crc8(&packet[2], 7);
+
+    //length
+    return 10;
+}

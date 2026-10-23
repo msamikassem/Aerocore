@@ -48,4 +48,12 @@ void UART2_init(void);
  */
 uint8_t UART2_read(void);
 
+/**
+ * @brief Sends a number of bit
+ *
+ *This function transmits the specified number of bit from the
+ *given data
+ */
+void UART2_send(const uint8_t *data, uint8_t length);
+
 #endif /* UART_H */

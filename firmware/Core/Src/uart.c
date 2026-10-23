@@ -94,3 +94,22 @@ void USART2_IRQHandler(void)
         }
     }
 }
+
+void UART2_send(const uint8_t *data, uint8_t length)
+{
+    for (uint8_t i = 0; i < length; i++)
+    {
+        // Wait until USART can accept another byte
+        while (!(USART2->SR & USART_SR_TXE))
+        {
+        }
+
+        // Send the next byte
+        USART2->DR = data[i];
+    }
+
+    // Wait until the final byte has finished transmitting
+    while (!(USART2->SR & USART_SR_TC))
+    {
+    }
+}

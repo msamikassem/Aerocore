@@ -29,8 +29,11 @@
 /** Address byte that starts every CRSF packet sent to the flight controller */
 #define CRSF_ADDRESS            0xC8U
 
-/** Packet type of the RC channels packet (RC_CHANNELS_PACKED) */
+/** Packet type of the RC channels packet */
 #define CRSF_RC_CHANNELS        0x16U
+
+/** Packet type of the telemetry*/
+#define CRSF_RC_TELEM			0x1E
 
 /** Number of RC channels in one packet */
 #define CRSF_RC_CHANNEL_COUNT   16U
@@ -70,5 +73,16 @@ uint16_t CRSF_get_channel(uint8_t channel);
  *               (output[0] is channel 1)
  */
 void CRSF_get_channels(uint16_t output[16]);
+
+/**
+ * @brief Build a CRSF attitude telemetry packet
+ *
+ * @param packet Output buffer, at least 10 bytes
+ * @param roll_rad Roll angle in radians
+ * @param pitch_rad Pitch angle in radians
+ * @param yaw_rad Yaw angle in radians
+ * @return Number of bytes in the packet
+ */
+uint8_t CRSF_build_attitude(uint8_t *packet, float roll_rad, float pitch_rad, float yaw_rad);
 
 #endif /* CRSF_H */
