@@ -57,6 +57,8 @@ static float stick_to_norm(uint16_t raw, float deadband)
 
 void control_init(Control *c)
 {
+
+
     pid_init(&c->roll_rate,  ROLL_PITCH_KP, ROLL_PITCH_KI, ROLL_PITCH_KD,ROLL_PITCH_I_LIMIT, ROLL_PITCH_OUT_LIM, D_FILTER_TAU);
 
     pid_init(&c->pitch_rate, ROLL_PITCH_KP, ROLL_PITCH_KI, ROLL_PITCH_KD,ROLL_PITCH_I_LIMIT, ROLL_PITCH_OUT_LIM, D_FILTER_TAU);

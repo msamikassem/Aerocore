@@ -26,12 +26,20 @@
  *
  */
 
-#include "crsf.h"
 
+#include "manual_tune.h"
+
+
+
+
+#include "crsf.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 // Parser state
 static uint8_t packet[CRSF_MAX_PACKET_SIZE];    // packet being received
-static uint8_t index = 0;                       // next free position in packet
+static uint8_t packet_index = 0;                       // next free position in packet
 static uint8_t length = 0;                      // length byte of the packet
 
 // Latest decoded channel values (11 bits each)
@@ -69,21 +77,21 @@ static void CRSF_decode_channels(void)
 uint8_t CRSF_process_byte(uint8_t byte)
 {
     // Waiting for the start of a packet.
-    if (index == 0)
+    if (packet_index == 0)
     {
         if (byte != CRSF_ADDRESS)
         {
             return 0;
         }
 
-        packet[index++] = byte;
+        packet[packet_index++] = byte;
 
         return 0;
     }
 
 
     // Second byte contains the packet length.
-    if (index == 1)
+    if (packet_index == 1)
     {
         length = byte;
 
@@ -94,23 +102,23 @@ uint8_t CRSF_process_byte(uint8_t byte)
         */
         if (length < 2 || length > 62)
         {
-            index = 0;
+        	packet_index = 0;
 
             return 0;
         }
 
-        packet[index++] = byte;
+        packet[packet_index++] = byte;
 
         return 0;
     }
 
 
     // Store the rest of the packet.
-    packet[index++] = byte;
+    packet[packet_index++] = byte;
 
 
     // Check if the complete packet has been received
-    if (index == length + 2)
+    if (packet_index == length + 2)
     {
         /*
          Check if this is an RC channel packet
@@ -122,13 +130,13 @@ uint8_t CRSF_process_byte(uint8_t byte)
         {
             CRSF_decode_channels();
 
-            index = 0;
+            packet_index = 0;
 
             return 1;
         }
 
         // Packet was valid, but it was a different CRSF packet type
-        index = 0;
+        packet_index = 0;
 
         return 0;
     }
@@ -216,4 +224,49 @@ uint8_t CRSF_build_attitude(uint8_t *packet, float roll_rad, float pitch_rad, fl
 
     //length
     return 10;
+}
+
+#define CRSF_PID_PACKET_SIZE 56U
+#define CRSF_TYPE_ARDUPILOT  0x80U
+#define CRSF_SUBTYPE_TEXT    0xF1U
+
+
+
+#define CRSF_ADDR_FC        0xC8U
+#define CRSF_TYPE_FLIGHT_MODE 0x21U
+
+// Integer -> text. D is tiny (max 0.002), so it gets more decimals.
+void CRSF_pid_text(char *out, size_t size, pid_sel_t sel, const Control *c)
+{
+    switch (sel)
+    {
+    case PID_SEL_P:
+    	snprintf(out, size, "P: %.3f", c->roll_rate.kp);
+
+    	break;
+    case PID_SEL_I:
+    	snprintf(out, size, "I: %.3f", c->roll_rate.ki);
+
+    	break;
+    default:
+    	snprintf(out, size, "D: %.5f", c->roll_rate.kd);
+
+    	break;
+    }
+}
+
+// Generic text -> FM frame. Reusable for flight mode or anything else
+uint8_t CRSF_build_fm_frame(uint8_t *packet, const char *text)
+{
+    size_t n = strlen(text);
+    if (n > 40U) n = 40U;                       // stay well under the 64-byte limit
+
+    packet[0] = CRSF_ADDR_FC;
+    packet[1] = (uint8_t)(n + 3U);              // type + text + NUL + CRC
+    packet[2] = CRSF_TYPE_FLIGHT_MODE;
+    memcpy(&packet[3], text, n);
+    packet[3U + n] = 0U;                        // NUL terminator
+    packet[4U + n] = CRSF_crc8(&packet[2], (uint8_t)(n + 2U));
+
+    return (uint8_t)(n + 5U);                   // total bytes to send
 }

@@ -85,4 +85,15 @@ void CRSF_get_channels(uint16_t output[16]);
  */
 uint8_t CRSF_build_attitude(uint8_t *packet, float roll_rad, float pitch_rad, float yaw_rad);
 
+/**
+ * @brief Build a CRSF PID telemetry packet
+ *
+ * @param packet Output buffer, at least enough bytes for the packet
+ * @param kp Proportional gain
+ * @param ki Integral gain
+ * @param kd Derivative gain
+ * @return Number of bytes in the packet
+ */
+uint8_t CRSF_build_pid_telemetry(uint8_t *packet, float kp, float ki, float kd);
+
 #endif /* CRSF_H */

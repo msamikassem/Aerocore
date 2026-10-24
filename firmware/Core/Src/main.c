@@ -1,11 +1,28 @@
-#include "main.h"
+/**
+ * @file main.c
+ * @brief Aerocore main application
+ */
 
-uint8_t print_line = 0;         // which line of the debug block is printed next */
-uint32_t last_telemetry = 0;
-uint8_t tx_packet[10];
+#include "main.h"
+#include "manual_tune.h"
+
+uint8_t print_line = 0;
+uint32_t last_telemetry = 0U;
+uint32_t last_pid_text = 0U;
+
+// CRSF telemetry buffers
+uint8_t attitude_packet[10];
+uint8_t pid_packet[50];
+char pid_text[41];
+
+// PID gain currently selected on the radio
+pid_sel_t pid_selected_gain = PID_SEL_P;
+
+// Flight controller objects
 Attitude att;
 Control ctrl;
 
+// Stored gyro offsets
 float stored_gyro_offset[3] =
 {
     0.00270f,
@@ -14,191 +31,182 @@ float stored_gyro_offset[3] =
 };
 
 void aerocore_init(void);
+
 int main(void)
 {
-	// Variables used by the main loop
-	    float gyro[3];
-	    float accel[3];
-	    float rates[3] = {0};
-	    float dt;
+    // Variables used by the main loop
+    float gyro[3];
+    float accel[3];
+    float rates[3] = {0.0f, 0.0f, 0.0f};
+    float dt;
 
-	    float roll_deg = 0.0f;
-	    float pitch_deg = 0.0f;
+    float roll_deg = 0.0f;
+    float pitch_deg = 0.0f;
 
-	    uint16_t rc[16] = {0};
-	    float motor[4] = {0};
+    uint16_t rc[16] = {0};
+    float motor[4] = {0.0f};
 
-	    uint32_t last_print = 0;
+    uint32_t last_print = 0U;
 
-	    aerocore_init();
-
+    aerocore_init();
 
     while (1)
     {
-        // Is the radio alive?
-        uint8_t rc_ok = rc_seen && ((HAL_GetTick() - rc_last_tick) < RC_TIMEOUT_MS);
+        // Check whether the radio link is alive
+        uint8_t rc_ok = rc_seen &&
+                        ((HAL_GetTick() - rc_last_tick) < RC_TIMEOUT_MS);
 
         if (imu_ready)
         {
             __disable_irq();
-            imu_ready = 0;
+
+            imu_ready = 0U;
             dt = (float)imu_cycles / CPU_HZ;
+
             for (int i = 0; i < 3; i++)
             {
-                gyro[i]  = imu_gyro[i] * DEG2RAD;
+                gyro[i] = imu_gyro[i] * DEG2RAD;
                 accel[i] = imu_accel[i];
             }
+
             __enable_irq();
 
-            // Skip a sample with a bad dt instead of feeding it to the filter
+            // Skip samples with an invalid time step
             if (dt > 0.0f && dt < 0.1f)
             {
-                // 1. Attitude
+                // 1. Update attitude estimator
                 attitude_update(&att, gyro, accel, dt);
                 attitude_get_rates(&att, gyro, rates);
 
-
-                roll_deg  = attitude_get_roll(&att)  * RAD2DEG;
+                roll_deg = attitude_get_roll(&att) * RAD2DEG;
                 pitch_deg = attitude_get_pitch(&att) * RAD2DEG;
 
-                // 2. Control
+                // 2. Update flight controller
                 if (rc_ok)
                 {
                     ControlInput in;
-                    in.roll_rad    = attitude_get_roll(&att);
-                    in.pitch_rad   = attitude_get_pitch(&att);
+
+                    in.roll_rad = attitude_get_roll(&att);
+                    in.pitch_rad = attitude_get_pitch(&att);
+
                     in.rate_rad[0] = rates[0];
                     in.rate_rad[1] = rates[1];
                     in.rate_rad[2] = rates[2];
-                    in.rc          = rc;
+
+                    in.rc = rc;
+
+                    // Update the PID gains and remember the selected gain
+                    pid_selected_gain = tune_pid(
+                        rc[9 - 1],    // CH9: tuning enable switch
+                        rc[7 - 1],    // CH7: select P, I, or D
+                        rc[10 - 1],   // CH10: tuning slider
+                        &ctrl
+                    );
 
                     control_update(&ctrl, &in, dt, motor);
                 }
                 else
                 {
-                    // Radio lost: disarm and stop the motors */
-                    ctrl.armed = 0;
+                    // Radio lost: disarm and stop the motors
+                    ctrl.armed = 0U;
+
                     for (int i = 0; i < 4; i++)
                     {
                         motor[i] = 0.0f;
                     }
                 }
 
-                // 3. Change PWM
+                // 3. Update motor PWM
                 for (int i = 0; i < 4; i++)
                 {
                     change_pwm(i + 1, motor[i]);
                 }
 
-                // Send attitude telemetry every 100 ms (10 Hz)
-                if ((HAL_GetTick() - last_telemetry) >= 100)
+                // 4. Send attitude telemetry every 100 ms
+                if ((HAL_GetTick() - last_telemetry) >= 100U)
                 {
                     last_telemetry = HAL_GetTick();
 
-                    float roll_rad  = attitude_get_roll(&att);
+                    float roll_rad = attitude_get_roll(&att);
                     float pitch_rad = attitude_get_pitch(&att);
-                    float yaw_rad   = rates[2];
 
-                    // Build the CRSF attitude packet
+                    // Replace with the estimated yaw angle if available
+                    float yaw_rad = 0.0f;
+
                     uint8_t length = CRSF_build_attitude(
-                        tx_packet,
+                        attitude_packet,
                         roll_rad,
                         pitch_rad,
                         yaw_rad
                     );
 
-                    // Send the packet through USART2
-                    UART2_send(tx_packet, length);
+                    UART2_send(attitude_packet, length);
+                }
+
+                // 5. Send only the selected PID gain every 100 ms
+                if (rc_ok && ((HAL_GetTick() - last_pid_text) >= 100U))
+                {
+                    last_pid_text = HAL_GetTick();
+
+                    // Format only the selected gain as text
+                    CRSF_pid_text(
+                        pid_text,
+                        sizeof(pid_text),
+                        pid_selected_gain,
+                        &ctrl
+                    );
+
+                    // Build the CRSF flight-mode text frame
+                    uint8_t length = CRSF_build_fm_frame(
+                        pid_packet,
+                        pid_text
+                    );
+
+                    // Transmit the selected gain
+                    UART2_send(pid_packet, length);
                 }
             }
         }
 
-        // Radio: runs once per RC packet
+        // Update RC channels when a new packet arrives
         if (rc_ready)
         {
             __disable_irq();
-            rc_ready = 0;
+
+            rc_ready = 0U;
             CRSF_get_channels(rc);
+
             __enable_irq();
         }
 
-
-        //Debug print: only when the USB link is free
-
+        // USB debug output
 #if DEBUG_PRINT
-        if ((HAL_GetTick() - last_print) >= PRINT_PERIOD_MS && usb_tx_ready())
+        if (((HAL_GetTick() - last_print) >= PRINT_PERIOD_MS) &&
+            usb_tx_ready())
         {
             last_print = HAL_GetTick();
 
-            // Values used by the lines below
-
-            const char *arm_text = "DISARMED";
-
-            if (ctrl.armed)
-            {
-                arm_text = "ARMED   ";
-            }
-
-            const char *mode_text = "ANGLE";
-
-            if (rc[CH_MODE - 1] > SWITCH_HIGH)
-            {
-                mode_text = "ACRO ";
-            }
-
-            const char *link_text = "LOST";
-
-            if (rc_ok)
-            {
-                link_text = "OK  ";
-            }
-
-            // Throttle stick in percent
-            int thr_percent = (int)((rc[CH_THROTTLE - 1] - CRSF_MIN) * 100.0f / (CRSF_MAX - CRSF_MIN));
-
-            if (thr_percent < 0)
-            {
-                thr_percent = 0;
-            }
-
-            if (thr_percent > 100)
-            {
-                thr_percent = 100;
-            }
-
-            // Print ONE line (or pair of lines) per pass, then move on to the next
-
+            // Display the current PID gains
             switch (print_line)
             {
-            /*
                 case 0:
-                    usb_printf("%s | mode %s | radio %s | thr %3d%%\r\n",
-                               arm_text, mode_text, link_text, thr_percent);
+                    usb_printf(
+                        "P %6.3f  I %6.3f  D %6.5f\r\n",
+                        ctrl.pitch_rate.kp,
+                        ctrl.pitch_rate.ki,
+                        ctrl.pitch_rate.kd
+                    );
                     break;
 
-                case 1:
-                    usb_printf("roll %6.1f  pitch %6.1f | gx %5.0f  gy %5.0f  gz %5.0f dps\r\n",
-                               roll_deg, pitch_deg,
-                               rates[0] * RAD2DEG, rates[1] * RAD2DEG, rates[2] * RAD2DEG);
+                default:
                     break;
-                case 2:
-                	usb_printf("ax %6.3f  ay %6.3f  az %6.3f g\r\n",
-                	               accel[0], accel[1], accel[2]);
-                	break;
-                	*/
-                case 0:
-
-                	usb_printf("ptch %6.3f  roll %6.3f  yaw %6.3f g\r\n",
-                			attitude_get_roll(&att), attitude_get_pitch(&att), rates[2]);
-                	                	break;
-
             }
 
             print_line++;
 
-            if (print_line >= 1)
+            if (print_line >= 1U)
             {
-                print_line = 0;
+                print_line = 0U;
             }
         }
 #endif
@@ -219,7 +227,7 @@ void aerocore_init(void)
     {
         while (1)
         {
-            // Stop if the IMU fails
+            // Stop if the IMU initialization fails
         }
     }
 
@@ -227,6 +235,6 @@ void aerocore_init(void)
     attitude_init(&att, stored_gyro_offset);
     attitude_set_level_trim(&att, -1.0f, 0.5f);
 
-    // Initialize controller
+    // Initialize flight controller
     control_init(&ctrl);
 }
