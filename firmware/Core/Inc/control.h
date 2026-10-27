@@ -91,14 +91,14 @@
 
 // Rate PID gains (starting values, NOT tested)
 
-#define ROLL_PITCH_KP       0.030f
-#define ROLL_PITCH_KI       0.030f
-#define ROLL_PITCH_KD       0.0003f
+#define ROLL_PITCH_KP       0.050f
+#define ROLL_PITCH_KI       0.35f
+#define ROLL_PITCH_KD       0.0007f
 #define ROLL_PITCH_I_LIMIT  0.10f
 #define ROLL_PITCH_OUT_LIM  0.25f
 
 #define YAW_KP              0.050f
-#define YAW_KI              0.050f
+#define YAW_KI              0.35f
 #define YAW_KD              0.0f
 #define YAW_I_LIMIT         0.10f
 #define YAW_OUT_LIM         0.15f

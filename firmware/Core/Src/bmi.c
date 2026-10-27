@@ -265,6 +265,8 @@ void EXTI1_IRQHandler(void)
         }
 
         imu_ready = 1;
+
+        flight_notify_from_isr();
     }
 }
 
